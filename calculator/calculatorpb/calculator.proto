@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package calculator;
+
+option go_package="github.com/S-ign/grpc-go-course/add/calculatorpb";
+
+message Adding {
+	int64 first_number = 1;
+	int64 second_number = 2;
+}
+
+message AddRequest {
+	Adding adding = 1;
+}
+
+message AddResponse {
+	int64 sum = 1;
+}
+
+// AddService takes numbers withing Adding and adds them together
+service AddService {
+	// Unary
+	rpc Add(AddRequest) returns (AddResponse) {};
+}
+
+message PrimeNumberDecompositionData {
+	int64 c_data = 1;
+}
+
+message PrimeNumberDecompositionRequest {
+	PrimeNumberDecompositionData prime_number_decomposition_data = 1;
+}
+
+message PrimeNumberDecompositionResponse {
+	int64 s_data = 1;
+}
+
+// PrimeNumberDecompositionService takes number in PrimeNumberDecompositionData
+// and streams its lowest divisible prime until no longer divisible.
+service PrimeNumberDecompositionService {
+	// Server streaming
+	rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
+}
