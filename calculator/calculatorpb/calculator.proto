@@ -41,6 +41,18 @@ message AverageResponse {
 	double data = 1;
 }
 
+message NextNumber {
+	int64 number = 1;
+}
+
+message FindMaximumRequest {
+	NextNumber next_number = 1;
+}
+
+message FindMaximumResponse {
+	int64 result = 1;
+}
+
 // CalculatorService preforms various calculator function
 service CalculatorService {
 	// Unary
@@ -49,4 +61,6 @@ service CalculatorService {
 	rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
 	// Client streaming
 	rpc Average(stream AverageRequest) returns (AverageResponse) {};
+	// BiDirectional streaming
+	rpc FindMaximum(stream FindMaximumRequest) returns (stream FindMaximumResponse) {};
 }
