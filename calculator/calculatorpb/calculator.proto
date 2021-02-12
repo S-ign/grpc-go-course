@@ -17,12 +17,6 @@ message AddResponse {
 	int64 sum = 1;
 }
 
-// AddService takes numbers withing Adding and adds them together
-service AddService {
-	// Unary
-	rpc Add(AddRequest) returns (AddResponse) {};
-}
-
 message PrimeNumberDecompositionData {
 	int64 c_data = 1;
 }
@@ -35,9 +29,24 @@ message PrimeNumberDecompositionResponse {
 	int64 s_data = 1;
 }
 
-// PrimeNumberDecompositionService takes number in PrimeNumberDecompositionData
-// and streams its lowest divisible prime until no longer divisible.
-service PrimeNumberDecompositionService {
+message Averaging {
+	int64 number = 1;
+}
+
+message AverageRequest {
+	Averaging averaging = 1;
+}
+
+message AverageResponse {
+	double data = 1;
+}
+
+// CalculatorService preforms various calculator function
+service CalculatorService {
+	// Unary
+	rpc Add(AddRequest) returns (AddResponse) {};
 	// Server streaming
 	rpc PrimeNumberDecomposition(PrimeNumberDecompositionRequest) returns (stream PrimeNumberDecompositionResponse) {};
+	// Client streaming
+	rpc Average(stream AverageRequest) returns (AverageResponse) {};
 }

@@ -28,6 +28,7 @@ func (*server) Greet(ctx context.Context, req *greetpb.GreetRequest) (*greetpb.G
 	return res, nil
 }
 
+// GreetManyTimes .
 func (*server) GreetManyTimes(req *greetpb.GreetManyTimesRequest,
 	stream greetpb.GreetService_GreetManyTimesServer) error {
 
@@ -46,7 +47,8 @@ func (*server) GreetManyTimes(req *greetpb.GreetManyTimesRequest,
 	return nil
 }
 
-// LongGreet Handles server streaming
+// LongGreet Handles server streaming, responding after
+// all requests have stopped and then greeting everyone.
 func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 	fmt.Printf("LongGreet function was invoked with a streaming request")
 	result := ""
@@ -63,6 +65,33 @@ func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 		firstName := req.GetGreeting().GetFirstName()
 		lastName := req.GetGreeting().GetLastName()
 		result += splitBy(" ", "Hello", firstName, lastName, "!")
+	}
+}
+
+// GreetEveryone Handles Bidirectional streaming, responding after
+// evry request containing first and last names
+func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) error {
+	fmt.Printf("GreetEveryone function was invoked with a streaming request")
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("error while reading client stream %v\n", err)
+			return err
+		}
+		firstName := req.GetGreeting().GetFirstName()
+		lastName := req.GetGreeting().GetLastName()
+		result := splitBy(" ", "Hello", firstName, lastName, "!")
+		err = stream.Send(&greetpb.GreetEveryoneResponse{
+			Result: result,
+		})
+		if err != nil {
+			log.Fatalf("Error while sending data to client: %v\n", err)
+			return err
+		}
 	}
 }
 

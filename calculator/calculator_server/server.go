@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"time"
@@ -12,8 +13,7 @@ import (
 )
 
 type server struct {
-	calculatorpb.UnimplementedAddServiceServer
-	calculatorpb.UnimplementedPrimeNumberDecompositionServiceServer
+	calculatorpb.UnimplementedCalculatorServiceServer
 }
 
 func (*server) Add(ctx context.Context, req *calculatorpb.AddRequest) (*calculatorpb.AddResponse, error) {
@@ -29,7 +29,7 @@ func (*server) Add(ctx context.Context, req *calculatorpb.AddRequest) (*calculat
 
 // PrimeNumberDecomposition takes in int64 and streams its lowest divisible prime until no longer divisible.
 func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositionRequest,
-	stream calculatorpb.PrimeNumberDecompositionService_PrimeNumberDecompositionServer) error {
+	stream calculatorpb.CalculatorService_PrimeNumberDecompositionServer) error {
 
 	fmt.Printf("PrimeNumberDecomposition function was invoked with %v\n", req)
 	cData := req.GetPrimeNumberDecompositionData().GetCData()
@@ -54,6 +54,27 @@ func (*server) PrimeNumberDecomposition(req *calculatorpb.PrimeNumberDecompositi
 	return nil
 }
 
+func (*server) Average(stream calculatorpb.CalculatorService_AverageServer) error {
+	fmt.Printf("Average function was invoked with a streaming request...")
+	var data float64
+	var counter float64
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return stream.SendAndClose(&calculatorpb.AverageResponse{
+				Data: data / counter,
+			})
+		}
+		if err != nil {
+			log.Fatalf("error reading client stream: %v\n", err)
+		}
+		number := float64(req.GetAveraging().GetNumber())
+		data += number
+		counter++
+		fmt.Printf("data: %f\ncounter: %f\n", data, counter)
+	}
+}
+
 func main() {
 	fmt.Println("CalculatorService initialized...")
 	lis, err := net.Listen("tcp", ":50051")
@@ -62,8 +83,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	calculatorpb.RegisterAddServiceServer(s, &server{})
-	calculatorpb.RegisterPrimeNumberDecompositionServiceServer(s, &server{})
+	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v\n", err)
